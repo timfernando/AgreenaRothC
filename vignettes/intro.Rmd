@@ -1,0 +1,68 @@
+---
+title: "Basic example of hoe to run the model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Basic example of hoe to run the model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(AgreenaRothC)
+```
+
+```{r}
+
+library(AgreenaRothC)
+
+#--------------------------
+# Inputs
+#--------------------------
+
+lonlat <- c(9.302144386852655, 56.5691426133239)
+sim_period <- c("2022-01-01", "2050-12-30")
+dates <- c("1990-01-01", "2020-12-30")
+#--------------------------
+# Wheater evaluation
+#--------------------------
+
+wth <- get_wth_power_nasa(lonlat = lonlat, dates = dates)
+plotWth(wth)
+
+
+#--------------------------
+# Running batch with all factor combinations
+#--------------------------
+
+biomass_inputs <- 1
+
+for (i in c(TRUE, FALSE)) {
+  for (j in c(TRUE, FALSE)) {
+    for (k in c("Till", "noTill", "redTill")) {
+      for (w in c("Till", "noTill", "redTill")) {
+        x[paste0(i,j,k,w)] <- AgreenaRothC(lonlat, sim_period, inp_s = biomass_inputs, cp_b = i, cp_s = j, till_b = till_b, till_s = till_s)
+      }
+    }
+  }
+}
+
+#--------------------------
+# Saving results for later evaluation
+#--------------------------
+
+saveRDS(x, "test.rds")
+
+#--------------------------
+# Plot bacth results
+#--------------------------
+
+plotRothC(x = "baseline", x)
+
+```
