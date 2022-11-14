@@ -1,6 +1,6 @@
 #' Source: https://www.isric.org/ \cr
 #' Details: https://www.isric.org/explore/soilgrids/faq-soilgrids \cr
-#' 
+#'
 #' @title Download a soil profile from the ISRIC soil database
 #' @description Retrieves soil data from the ISRIC global database and converts it to a data frame that can be used to run RothC
 #' @name get_isric_soil_profile_rothc
@@ -15,74 +15,107 @@
 #' * Clay - clay \cr
 #' * Sand - sand \cr
 #' * Silt - silt \cr
+#' \code{attr(x, "meta")} loads meta information about the location from where the soil profile was created.
 #' @seealso \code{\link{apsimx_soil_profile}}, \code{\link{edit_apsim_replace_soil_profile}}, \code{\link{edit_apsimx_replace_soil_profile}}.
+#' @import jsonlite
 #' @export
 #' @author Marcos Alves (Modified from: Fernando E. Miguez)
-#' @examples 
+#' @examples
 #' \dontrun{
 #' ## Get soil profile properties for a single point
 #' sp1 <- get_isric_soil_profile_rothc(lonlat = c(-93, 42))
 #' sp1
-#' 
-#' 
+#' attr(sp1, "meta")
+#'
+#'
 #' }
 
-get_isric_soil_profile_rothc <- function(lonlat, 
-                                   statistic = c("mean", "Q0.5"),
-                                   find.location.name = TRUE){
-  
+get_isric_soil_profile_rothc <- function(lonlat,
+                                         statistic = c("mean", "Q0.5"),
+                                         find.location.name = TRUE){
+
   statistic <- match.arg(statistic)
-  
+
   #### Create extent step ####
   lon <- as.numeric(lonlat[1])
   lat <- as.numeric(lonlat[2])
-  
+  lon_initial <- as.numeric(lonlat[1])
+  lat_initial <- as.numeric(lonlat[2])
+
   if(lon < -180 || lon > 180) stop("longitude should be between -180 and 180")
   if(lat < -90 || lat > 90) stop("latitude should be between -90 and 90")
-  
-  ##  rest0 <- "https://rest.soilgrids.org/soilgrids/v2.0/properties/query?lon="
-  rest0 <- "https://rest.isric.org/soilgrids/v2.0/properties/query?lon="
-  rest1 <- paste0(rest0, lon, "&lat=", lat)
-  rest.properties <- paste("&property=bdod", 
-                           "property=soc",
-                           "property=clay", 
-                           "property=sand", 
-                           "property=silt", sep = "&")
-  rest.depths <- paste("&depth=0-5cm", "depth=0-30cm", "depth=5-15cm", 
-                       "depth=15-30cm", "depth=30-60cm", "depth=60-100cm", "depth=100-200cm", sep = "&")
-  rest.statistic <- paste("&value", statistic, sep = "=")
-  rest.query <- paste0(rest1, rest.properties, rest.depths, rest.statistic)
-  rest.data <- jsonlite::fromJSON(rest.query)
-  
+
+  retrieve_soil <- function(lon, lat, statistic) {
+    ##  rest0 <- "https://rest.soilgrids.org/soilgrids/v2.0/properties/query?lon="
+    rest0 <- "https://rest.isric.org/soilgrids/v2.0/properties/query?lon="
+    rest1 <- paste0(rest0, lon, "&lat=", lat)
+    rest.properties <- paste("&property=bdod",
+                             "property=soc",
+                             "property=clay",
+                             "property=sand",
+                             "property=silt", sep = "&")
+    rest.depths <- paste("&depth=0-5cm", "depth=0-30cm", "depth=5-15cm",
+                         "depth=15-30cm", "depth=30-60cm", "depth=60-100cm", "depth=100-200cm", sep = "&")
+    rest.statistic <- paste("&value", statistic, sep = "=")
+    rest.query <- paste0(rest1, rest.properties, rest.depths, rest.statistic)
+    rest.data <- jsonlite::fromJSON(rest.query)
+  }
+
+  set.seed(123)
+  n <- 10
+  c <- 0.001
+  rest.data <- retrieve_soil(lon, lat, statistic)
+  soc <- rest.data$properties$layers[5,3][[1]][,3]
+  soc <- NA
+
   #### Process query
   sp.nms <- rest.data$properties$layers[["name"]]
-  
+
   if(!all(sp.nms %in% c("bdod", "soc", "clay", "sand", "silt"))){
     cat("Found these properties", sp.nms, "\n")
     cat("Expected these properties", c("bdod", "soc", "clay", "sand", "silt"), "\n")
     stop("soil properties names do not match")
   }
-  
+
+
+
+  # if(any(is.na(soc))) stop("No soil data available for this location. Did you specify the coordinates correctly?")
+
+
+  while (any(is.na(soc))) {
+    lon <- runif(n, min = lon - c, max = lon + c)
+    lat <- runif(n, min = lat - c, max = lat + c)
+    lonlat_grid <- expand.grid(lon, lat)
+    lonlat <- lonlat_grid[sample(1:n^2, n),]
+    for (i in 1:n) {
+      lon <- as.numeric(lonlat[i,1])
+      lat <- as.numeric(lonlat[i,2])
+      rest.data <- retrieve_soil(lon, lat, statistic)
+      soc <- rest.data$properties$layers[5,3][[1]][,3]
+      if (!any(is.na(soc))) {
+        break
+      }
+    }
+    print(c)
+  }
+
+
   bdod <- rest.data$properties$layers[1,3][[1]][,3]
   clay <- rest.data$properties$layers[2,3][[1]][,3]
   sand <- rest.data$properties$layers[3,3][[1]][,3]
   silt <- rest.data$properties$layers[4,3][[1]][,3]
-  soc <- rest.data$properties$layers[5,3][[1]][,3]  
-  
-  if(any(is.na(soc))) stop("No soil data available for this location. Did you specify the coordinates correctly?")
-  
 
-  
+
   ### For some of the conversions see: https://www.isric.org/explore/soilgrids/faq-soilgrids
-    soil_profile <- NULL
-    soil_profile$layers <- rest.data$properties$layers[1,3][[1]][2]
-    soil_profile$BD <- bdod[[1]] * 1e-2
-    soil_profile$Carbon <- soc[[1]] * 1e-2
-    soil_profile$ParticleSizeClay <- clay[[1]] * 1e-1
-    soil_profile$ParticleSizeSand <- sand[[1]] * 1e-1
-    soil_profile$ParticleSizeSilt <- silt[[1]] * 1e-1
-    soil_profile <- as.data.frame(soil_profile)
-  
+  soil_profile <- NULL
+  soil_profile$layers <- rest.data$properties$layers[1,3][[1]][2]
+  soil_profile$BD <- bdod[[1]] * 1e-2
+  soil_profile$Carbon <- soc[[1]] * 1e-2
+  soil_profile$ParticleSizeClay <- clay[[1]] * 1e-1
+  soil_profile$ParticleSizeSand <- sand[[1]] * 1e-1
+  soil_profile$ParticleSizeSilt <- silt[[1]] * 1e-1
+  soil_profile <- as.data.frame(soil_profile)
+
   #### Passing parameters from soilwat
   ## The soil texture class will be based on the first layer only
   txt_clss <- texture_class(soil_profile$ParticleSizeClay[1] * 1e-2, soil_profile$ParticleSizeSilt[1] * 1e-2)
@@ -91,7 +124,7 @@ get_isric_soil_profile_rothc <- function(lonlat,
     if(requireNamespace("maps", quietly = TRUE)){
       country <- maps::map.where(x = lon, y = lat)
       if(country == "USA"){
-        state <- toupper(maps::map.where(database = "county", x = lon, y = lat)) 
+        state <- toupper(maps::map.where(database = "county", x = lon, y = lat))
       }else{
         url <- paste0("https://photon.komoot.io/reverse?lon=", lon, "&lat=", lat)
         fgeo <- jsonlite::fromJSON(url)
@@ -102,25 +135,27 @@ get_isric_soil_profile_rothc <- function(lonlat,
       fgeo <- jsonlite::fromJSON(url)
       state <- fgeo$feature$properties$state
       country <- fgeo$features$properties$country
-    }    
+    }
   } else {
     state <- NULL
     country <- NULL
   }
-  
+
   #### Attributes ####
   alist <- list()
-  alist$SoilType <- paste("SoilType = ", txt_clss)
+  alist$SoilType <- txt_clss
   alist$State <- state
   alist$Country <- country
   alist$Longitude <- lon
   alist$Latitude <- lat
+  alist$ini_Longitude <- lon_initial
+  alist$ini_Latitude <- lat_initial
   alist$DataSource <- paste("Original source is www.isric.org. See: https://www.isric.org/explore/soilgrids/faq-soilgrids ",Sys.time())
   alist$Comments <- paste("resolution = 250m",
                           "- taxonomic classification name =", txt_clss)
   attr(soil_profile, "meta") <- alist
-  
-  return(soil_profile)  
+
+  return(soil_profile)
 }
 
 ## Potentially useful function provided by Eric Zurcher
@@ -132,29 +167,29 @@ get_isric_soil_profile_rothc <- function(lonlat,
 
 # Re-express the PSD in terms of the International system, using an equation from Minasny et al. (2001)
 
-intl_clay_propn <- function( usda_clay, usda_silt ) { 
-  return( usda_clay) 
+intl_clay_propn <- function( usda_clay, usda_silt ) {
+  return( usda_clay)
 }
 
-intl_silt_propn <- function( usda_clay, usda_silt ) { 
-  return( max( 0.0, -0.0041 - 0.127*usda_clay + 0.553*usda_silt + 0.17*usda_clay^2 - 0.19*usda_silt^2 + 0.59*usda_clay*usda_silt ) ) 
+intl_silt_propn <- function( usda_clay, usda_silt ) {
+  return( max( 0.0, -0.0041 - 0.127*usda_clay + 0.553*usda_silt + 0.17*usda_clay^2 - 0.19*usda_silt^2 + 0.59*usda_clay*usda_silt ) )
 }
 
-intl_sand_propn <- function( usda_clay, usda_silt ) { 
+intl_sand_propn <- function( usda_clay, usda_silt ) {
   return( 1.0 - intl_clay_propn( usda_clay, usda_silt ) - intl_silt_propn( usda_clay, usda_silt ) )
-}  
+}
 
 # Texture triangle as equations
 
 texture_class <- function (usda_clay, usda_silt ) {
-  
+
   if(usda_clay < 0 || usda_clay > 1) stop("usda_clay should be between 0 and 1")
   if(usda_silt < 0 || usda_silt > 1) stop("usda_silt should be between 0 and 1")
-  
+
   intl_clay <- intl_clay_propn( usda_clay, usda_silt )
   intl_silt <- intl_silt_propn( usda_clay, usda_silt )
   intl_sand <- 1.0 - intl_clay - intl_silt
-  
+
   if ((intl_sand < 0.75 - intl_clay) && (intl_clay >= 0.40)) {
     class <- "silty clay"
   } else if ((intl_sand < 0.75 - intl_clay) && (intl_clay >= 0.26)) {
@@ -177,8 +212,7 @@ texture_class <- function (usda_clay, usda_silt ) {
     class <- "loamy sand"
   } else {
     class <- "sand"
-  }  
-  
+  }
+
   return( class )
 }
-

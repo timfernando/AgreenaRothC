@@ -192,14 +192,14 @@ AgreenaRothC <- function(lonlat, sim_period, inp_b = 1.7, inp_s = 1.7, cp_b = FA
   res <- list("Mean_capture" = Mean_capture, "Std_dev" = Std_dev, "soilC_spinup" = mscc_stats_su, "soilC_baseline" = mscc_stats_b, "soilC_scenario" = mscc_stats_s)
 
   alist <- list()
-  alist$Longitude <- lon
-  alist$Latitude <- lat
-  alist$ini_Longitude <- lon_initial
-  alist$ini_Latitude <- lat_initial
-  alist$ini_SOC <- soil$Carbon
+  alist$Longitude <- attr(soil, "meta")$Longitude
+  alist$Latitude <- attr(soil, "meta")$Latitude
+  alist$ini_Longitude <- attr(soil, "meta")$ini_Longitude
+  alist$ini_Latitude <- attr(soil, "meta")$ini_Latitude
   alist$SoilType <- attr(soil, "meta")$SoilType
+  alist$ini_SOC <- soil$Carbon
   alist$Unit <- "C Mg/ha"
-  attr(res, "Meta") <- alist
+  attr(res, "meta") <- alist
 
   return(res)
 }
