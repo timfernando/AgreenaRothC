@@ -39,23 +39,28 @@ get_isric_soil_profile_rothc <- function(lonlat,
   #### Create extent step ####
   lon <- as.numeric(lonlat[1])
   lat <- as.numeric(lonlat[2])
+  lon_initial <- as.numeric(lonlat[1])
+  lat_initial <- as.numeric(lonlat[2])
 
   if(lon < -180 || lon > 180) stop("longitude should be between -180 and 180")
   if(lat < -90 || lat > 90) stop("latitude should be between -90 and 90")
 
-  ##  rest0 <- "https://rest.soilgrids.org/soilgrids/v2.0/properties/query?lon="
-  rest0 <- "https://rest.isric.org/soilgrids/v2.0/properties/query?lon="
-  rest1 <- paste0(rest0, lon, "&lat=", lat)
-  rest.properties <- paste("&property=bdod",
-                           "property=soc",
-                           "property=clay",
-                           "property=sand",
-                           "property=silt", sep = "&")
-  rest.depths <- paste("&depth=0-5cm", "depth=0-30cm", "depth=5-15cm",
-                       "depth=15-30cm", "depth=30-60cm", "depth=60-100cm", "depth=100-200cm", sep = "&")
-  rest.statistic <- paste("&value", statistic, sep = "=")
-  rest.query <- paste0(rest1, rest.properties, rest.depths, rest.statistic)
-  rest.data <- jsonlite::fromJSON(rest.query)
+  retrieve_soil <- function(lon, lat, statistic) {
+    ##  rest0 <- "https://rest.soilgrids.org/soilgrids/v2.0/properties/query?lon="
+    rest0 <- "https://rest.isric.org/soilgrids/v2.0/properties/query?lon="
+    rest1 <- paste0(rest0, lon, "&lat=", lat)
+    rest.properties <- paste("&property=bdod",
+                             "property=soc",
+                             "property=clay",
+                             "property=sand",
+                             "property=silt", sep = "&")
+    rest.depths <- paste("&depth=0-5cm", "depth=0-30cm", "depth=5-15cm",
+                         "depth=15-30cm", "depth=30-60cm", "depth=60-100cm", "depth=100-200cm", sep = "&")
+    rest.statistic <- paste("&value", statistic, sep = "=")
+    rest.query <- paste0(rest1, rest.properties, rest.depths, rest.statistic)
+    rest.data <- jsonlite::fromJSON(rest.query)
+  }
+
 
   #### Process query
   sp.nms <- rest.data$properties$layers[["name"]]
@@ -66,14 +71,40 @@ get_isric_soil_profile_rothc <- function(lonlat,
     stop("soil properties names do not match")
   }
 
+
+
+  # if(any(is.na(soc))) stop("No soil data available for this location. Did you specify the coordinates correctly?")
+
+  set.seed(123)
+  n <- 10
+  c <- 0.001
+  rest.data <- retrieve_soil(lon, lat, statistic)
+  soc <- rest.data$properties$layers[5,3][[1]][,3]
+  soc <- NA
+  while (any(is.na(soc))) {
+    lon <- runif(n, min = lon - c, max = lon + c)
+    lat <- runif(n, min = lat - c, max = lat + c)
+    lonlat_grid <- expand.grid(lon, lat)
+    lonlat <- lonlat_grid[sample(1:n^2, n),]
+    for (i in 1:n) {
+      lon <- as.numeric(lonlat[i,1])
+      lat <- as.numeric(lonlat[i,2])
+      rest.data <- retrieve_soil(lon, lat, statistic)
+      soc <- rest.data$properties$layers[5,3][[1]][,3]
+      if (!any(is.na(soc))) {
+        print("break")
+        break
+      }
+    }
+    print(c)
+    c <- sqrt(c)
+  }
+
+
   bdod <- rest.data$properties$layers[1,3][[1]][,3]
   clay <- rest.data$properties$layers[2,3][[1]][,3]
   sand <- rest.data$properties$layers[3,3][[1]][,3]
   silt <- rest.data$properties$layers[4,3][[1]][,3]
-  soc <- rest.data$properties$layers[5,3][[1]][,3]
-
-  if(any(is.na(soc))) stop("No soil data available for this location. Did you specify the coordinates correctly?")
-
 
 
   ### For some of the conversions see: https://www.isric.org/explore/soilgrids/faq-soilgrids
@@ -113,11 +144,13 @@ get_isric_soil_profile_rothc <- function(lonlat,
 
   #### Attributes ####
   alist <- list()
-  alist$SoilType <- paste("SoilType = ", txt_clss)
+  alist$SoilType <- txt_clss
   alist$State <- state
   alist$Country <- country
   alist$Longitude <- lon
   alist$Latitude <- lat
+  alist$ini_Longitude <- lon_initial
+  alist$ini_Latitude <- lat_initial
   alist$DataSource <- paste("Original source is www.isric.org. See: https://www.isric.org/explore/soilgrids/faq-soilgrids ",Sys.time())
   alist$Comments <- paste("resolution = 250m",
                           "- taxonomic classification name =", txt_clss)

@@ -3,7 +3,7 @@
 #' Calculates the effects of moisture (precipitation and pan evaporation) on
 #' decomposition rates according to the RothC model.
 #'
-#' @title f_moist_rothc
+#' @title Effect of moisture on C flows
 #' @param pp A vector with monthly precipitation (mm).
 #' @param et A vector with same length with open pan evaporation or
 #' evapotranspiration (mm).
@@ -23,24 +23,23 @@ f_moist_rothc <- function(pp, et, s_thick, pclay, pE = 1.0, soil_cover = TRUE) {
   if (length(et) != length(pp)) {
     stop("pp and et must have the same lengh")
   }
-  soil_cover <- as.logical(soil_cover)
+  soil_cover <- !as.logical(soil_cover)
   if (length(soil_cover)>1) {
     if (length(soil_cover) != length(pp) | length(soil_cover) != length(et)) {
       stop("pp, et and soil_cover must have the same lengh")
     }
-    fwT <- fW.RothC(P=pp, E=et,
+    fwBare <- fW.RothC(P=pp, E=et,
                     S.Thick = s_thick, pClay = pclay,
                     pE = pE, bare = TRUE)$b
-    fwF <- fW.RothC(P=pp, E=et,
+    fwCoverd <- fW.RothC(P=pp, E=et,
                     S.Thick = s_thick, pClay = pclay,
                     pE = pE, bare = FALSE)$b
-    fw <- fwT
-    fw[!soil_cover] <- fwF[!soil_cover]
+    fw <- fwBare
+    fw[!soil_cover] <- fwCoverd[!soil_cover]
   } else {
     fw <- fW.RothC(P=pp, E=et,
                     S.Thick = s_thick, pClay = pclay,
                     pE = pE, bare = soil_cover)$b
   }
-
 return(fw)
 }
