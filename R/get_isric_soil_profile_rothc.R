@@ -96,7 +96,6 @@ get_isric_soil_profile_rothc <- function(lonlat,
         break
       }
     }
-    print(c)
   }
 
 
