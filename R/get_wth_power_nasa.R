@@ -9,7 +9,9 @@
 #' @details A summary description of nasa power variables can be found here: https://gist.github.com/abelcallejo/d68e70f43ffa1c8c9f6b5e93010704b8
 #' TODO: Check the unit measures of the different outputs
 #' @author Marcos Alves
-#' @import nasapower SoilR dplyr
+#' @import nasapower
+#' @import SoilR
+#' @import dplyr
 #' @export
 #' @examples
 #' \dontrun{

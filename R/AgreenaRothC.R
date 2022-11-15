@@ -20,7 +20,7 @@
 #' soil carbon stocks equilibrium is reached for each soil carbon compartment.
 #' Those values are then used to initialize Baseline and scenario runs.
 #' @author Marcos Alves
-#' @import SoilR stats
+#' @import SoilR
 #' @export
 #'
 

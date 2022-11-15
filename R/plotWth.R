@@ -4,7 +4,8 @@
 #' @details Plots weather data Climate normals download from nasa power
 #' @author Marcos Alves
 #' @seealso \link{get_wth_power_nasa}
-#' @import ggplot2 ggpubr
+#' @import ggplot2
+#' @import ggpubr
 #' @export
 #'
 
