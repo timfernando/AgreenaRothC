@@ -93,9 +93,11 @@ get_isric_soil_profile_rothc <- function(lonlat,
       rest.data <- retrieve_soil(lon, lat, statistic)
       soc <- rest.data$properties$layers[5,3][[1]][,3]
       if (!any(is.na(soc))) {
+        warning(paste("Coordinates where altered from (lon, lat):", lon_initial, lat_initial, "->", lon, lat))
         break
       }
     }
+    c <- c^2
   }
 
 
