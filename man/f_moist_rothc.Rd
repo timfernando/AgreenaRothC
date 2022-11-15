@@ -2,7 +2,7 @@
 % Please edit documentation in R/f_moist_rothc.R
 \name{f_moist_rothc}
 \alias{f_moist_rothc}
-\title{f_moist_rothc}
+\title{Effect of moisture on C flows}
 \usage{
 f_moist_rothc(pp, et, s_thick, pclay, pE = 1, soil_cover = TRUE)
 }

@@ -43,9 +43,8 @@ AgreenaRothC <- function(lonlat, sim_period, inp_b = 1.7, inp_s = 1.7, cp_b = FA
 
   # downloading external input data
   wth_dates <- c("1990-01-01", "2021-12-30")
-  wth <- get_wth_power_nasa(lonlat = lonlat, dates = wth_dates)
   soil <- get_isric_soil_profile_rothc(lonlat, statistic = "mean", find.location.name = TRUE)
-
+  wth <- get_wth_power_nasa(lonlat = c(attr(soil, "meta")$Longitude, attr(soil, "meta")$Latitude), dates = wth_dates)
   # inorganic Carbon
   iom <- 0.049 * (soil$Carbon^(1.139))
 

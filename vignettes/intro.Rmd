@@ -20,8 +20,6 @@ library(AgreenaRothC)
 
 ```{r}
 
-library(AgreenaRothC)
-
 #--------------------------
 # Inputs
 #--------------------------
