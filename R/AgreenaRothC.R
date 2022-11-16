@@ -28,7 +28,7 @@
 AgreenaRothC <-
   function(lonlat,
            sim_period,
-           inp_s = "cont",
+           inp_s = "same_as_base",
            cp_b = FALSE,
            cp_s = TRUE,
            till_b = c("Till", "noTill", "redTill"),
@@ -206,12 +206,12 @@ AgreenaRothC <-
         soilC_b_all_time <- getC(model_b)
         soilC_b <- as.numeric(tail(soilC_b_all_time, 1))
 
-        if (inp_s == "cont") {
+        if (inp_s == "same_as_base") {
           inp_s <- inp_calib
         } else {
           if (!is.numeric(inp_s)) {
             stop(
-              "inp_s must be either 'cont' representing a continuation of the
+              "inp_s must be either 'same_as_base' representing a continuation of the
               calibrated input biomass or a number representing the new biomass
               inputs"
             )
@@ -262,7 +262,13 @@ AgreenaRothC <-
 
     # Cleaning up and calc statistics
     Mean_capture <- mean(unlist(sapply(RothC_runs, "[", "sc_diff")))
-    Std_dev <- sd(unlist(sapply(RothC_runs, "[", "sc_diff")))
+    Std_dev_capture <- sd(unlist(sapply(RothC_runs, "[", "sc_diff")))
+
+    Mean_input_calib <- mean(unlist(sapply(RothC_runs, "[", "inp_calib")))
+    Std_dev_input_calib <- sd(unlist(sapply(RothC_runs, "[", "inp_calib")))
+
+    Mean_input_scenario <- inp_s
+
 
     mscc <- sapply(RothC_runs, "[", "sc_spinup")
     mscc <-
@@ -360,10 +366,50 @@ AgreenaRothC <-
 
     mscc_stats_s <- cbind(mscc_stats_s, mscc_stats_total_s)
 
+    mscc <- sapply(RothC_runs, "[", "sc_spinup")
+    mscc <-
+      array(unlist(mscc), dim = c(length(spin_period), 5, nsamples))
+    mscc_mean <- apply(mscc, c(1, 2), mean)
+    mscc_sd <- apply(mscc, c(1, 2), sd)
+    mscc_stats_su <- as.data.frame(cbind(mscc_mean, mscc_sd))
+    colnames(mscc_stats_su) <-
+      c(
+        "DPM_SU",
+        "RPM_SU",
+        "BIO_SU",
+        "HUM_SU",
+        "IOM_SU",
+        "DPM_SU_SD",
+        "RPM_SU_SD",
+        "BIO_SU_SD",
+        "HUM_SU_SD",
+        "IOM_SU_SD"
+      )
+
+    mscc <- sapply(RothC_runs, "[", "sc_spinup")
+    mscc <-
+      array(unlist(mscc), dim = c(length(spin_period), 5, nsamples))
+    mscc_total <- apply(mscc, c(1, 3), sum)
+    mscc_total_mean <- apply(mscc_total, 1, mean)
+    mscc_total_sd <- apply(mscc_total, 1, sd)
+    mscc_stats_total_su <-
+      as.data.frame(cbind(mscc_total_mean, mscc_total_sd))
+    colnames(mscc_stats_total_su) <- c("SC_SU", "SC_SU_SD")
+
     res <-
       list(
+        "Longitude final" <- attr(soil, "meta")$Longitude,
+        "Latitude final" <- attr(soil, "meta")$Latitude,
+        "Soil type" = attr(soil, "meta")$SoilType,
+        "Mean 30cm clay %" = mean(soil$ParticleSizeClay[1:3]),
+        "Mean TS" = colMeans(wth[, "TS_AV"]),
+        "Mean PR" = colMeans(wth[, "PRECTOTCORR_AV"]),
+        "Mean ET" = colMeans(wth[, "EVPTRNS_AV"]),
+        "Mean_input_calib" = Mean_input_calib,
+        "Std_dev_input_calib" = Std_dev_input_calib,
+        "Mean_input_scenario" = Mean_input_scenario,
         "Mean_capture" = Mean_capture,
-        "Std_dev" = Std_dev,
+        "Std_dev_capture" = Std_dev_capture,
         "soilC_spinup" = mscc_stats_su,
         "soilC_baseline" = mscc_stats_b,
         "soilC_scenario" = mscc_stats_s
@@ -374,9 +420,8 @@ AgreenaRothC <-
     alist$Latitude <- attr(soil, "meta")$Latitude
     alist$ini_Longitude <- attr(soil, "meta")$ini_Longitude
     alist$ini_Latitude <- attr(soil, "meta")$ini_Latitude
-    alist$SoilType <- attr(soil, "meta")$SoilType
     alist$ini_SOC <- soil$Carbon
-    alist$Unit <- "C Mg/ha"
+    alist$Unit_SOC <- "C Mg/ha"
     attr(res, "meta") <- alist
 
     return(res)
