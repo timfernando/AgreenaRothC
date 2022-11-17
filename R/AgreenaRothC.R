@@ -85,6 +85,7 @@ AgreenaRothC <-
       )
 
     # flow rate effects distribution (baseline)
+    fc_b <- fC.crop.retainment(cp_b)
     ft_b <- t(apply(wth_dist[, , "TS"], 1, fT.RothC))
     fw_b <-
       t(apply(wth_dist[, , c("PR", "ET")], 1, function(x) {
@@ -97,9 +98,12 @@ AgreenaRothC <-
           soil_cover = cp_b
         )}))
     colnames(fw_b) <- month.name
-    fxi_b <- fw_b * ft_b
+    fxi_b <- fw_b * ft_b * fc_b
+
+
 
     # flow rate effects distribution (scenario)
+    fc_s <- fC.crop.retainment(cp_s)
     ft_s <- t(apply(wth_dist[, , "TS"], 1, fT.RothC))
     fw_s <-
       t(apply(wth_dist[, , c("PR", "ET")], 1, function(x) {
@@ -112,7 +116,7 @@ AgreenaRothC <-
           soil_cover = cp_s
         )}))
     colnames(fw_s) <- month.name
-    fxi_s <- fw_s * ft_s
+    fxi_s <- fw_s * ft_s * fc_s
 
     fxi_all <-
       array(
