@@ -402,9 +402,10 @@ AgreenaRothC <-
 
     res <-
       list(
-        "Longitude final" <- attr(soil, "meta")$Longitude,
-        "Latitude final" <- attr(soil, "meta")$Latitude,
+        "Longitude final" = attr(soil, "meta")$Longitude,
+        "Latitude final" = attr(soil, "meta")$Latitude,
         "Soil type" = attr(soil, "meta")$SoilType,
+        "Ini. SOC" = soil$Carbon,
         "Mean 30cm clay %" = mean(soil$ParticleSizeClay[1:3]),
         "Mean TS" = colMeans(wth[, "TS_AV"]),
         "Mean PR" = colMeans(wth[, "PRECTOTCORR_AV"]),
