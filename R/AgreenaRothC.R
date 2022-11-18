@@ -32,7 +32,8 @@ AgreenaRothC <-
            cp_b = FALSE,
            cp_s = TRUE,
            till_b = c("Till", "noTill", "redTill"),
-           till_s = c("Till", "noTill", "redTill")) {
+           till_s = c("Till", "noTill", "redTill"),
+           soil_data = "lucas") {
     set.seed(123)
     till_b <- match.arg(till_b)
     till_s <- match.arg(till_s)
@@ -55,10 +56,29 @@ AgreenaRothC <-
 
     # downloading external input data
     wth_dates <- c("1990-01-01", "2021-12-30")
-    soil <-
-      get_isric_soil_profile_rothc(lonlat,
-                                   statistic = "mean",
-                                   find.location.name = TRUE)
+
+    if (soil_data == "isric") {
+      soil <-
+        get_isric_soil_profile_rothc(lonlat,
+                                     statistic = "mean",
+                                     find.location.name = TRUE)
+    }
+
+    if (soil_data == "lucas") {
+      soil <- data.frame(label = c("0-10cm", "10-20cm", "20-30cm"), Carbon = 1:3, ParticleSizeClay = 1:3)
+      distancia <- function(x1,x2) {
+        return(dist(rbind(x1, x2)))
+      }
+
+      y <- apply(lucas[,c("TH_LONG", "TH_LAT")], 1, distancia, lonlat)
+      lucas_soil <- lucas[match(min(y), y),c("Depth","OC", "CLAY")]
+      carbon <- rep(as.numeric(lucas_soil$OC)/(2/3)/3,3) # assuming carbon density is constant between 0-20 and 20-30 cm and extrapolating (regra de 3)
+      soil$Carbon <- carbon
+      soil$ParticleSizeClay <- rep(lucas_soil$CLAY,3)
+      attr(soil, "meta")$Longitude <- lucas[match(min(y), y),c("TH_LONG")]
+      attr(soil, "meta")$Latitude <- lucas[match(min(y), y),c("TH_LAT")]
+    }
+
     wth <-
       get_wth_power_nasa(lonlat = c(attr(soil, "meta")$Longitude,
                                     attr(soil, "meta")$Latitude),
