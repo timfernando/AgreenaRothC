@@ -10,7 +10,7 @@
 fC_crop_retainment <- function(x) {
   x <- as.logical(x)
   y <- ifelse(x, 0.6, 1)
-  if (length(y)==1) {
+  if (length(y) == 1) {
     y <- rep(y, 12)
   }
   return(y)

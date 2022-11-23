@@ -24,22 +24,28 @@ f_moist_rothc <- function(pp, et, s_thick, pclay, pE = 1.0, soil_cover = TRUE) {
     stop("pp and et must have the same lengh")
   }
   soil_cover <- !as.logical(soil_cover)
-  if (length(soil_cover)>1) {
+  if (length(soil_cover) > 1) {
     if (length(soil_cover) != length(pp) | length(soil_cover) != length(et)) {
       stop("pp, et and soil_cover must have the same lengh")
     }
-    fwBare <- fW.RothC(P=pp, E=et,
-                    S.Thick = s_thick, pClay = pclay,
-                    pE = pE, bare = TRUE)$b
-    fwCoverd <- fW.RothC(P=pp, E=et,
-                    S.Thick = s_thick, pClay = pclay,
-                    pE = pE, bare = FALSE)$b
+    fwBare <- fW.RothC(
+      P = pp, E = et,
+      S.Thick = s_thick, pClay = pclay,
+      pE = pE, bare = TRUE
+    )$b
+    fwCoverd <- fW.RothC(
+      P = pp, E = et,
+      S.Thick = s_thick, pClay = pclay,
+      pE = pE, bare = FALSE
+    )$b
     fw <- fwBare
     fw[!soil_cover] <- fwCoverd[!soil_cover]
   } else {
-    fw <- fW.RothC(P=pp, E=et,
-                    S.Thick = s_thick, pClay = pclay,
-                    pE = pE, bare = soil_cover)$b
+    fw <- fW.RothC(
+      P = pp, E = et,
+      S.Thick = s_thick, pClay = pclay,
+      pE = pE, bare = soil_cover
+    )$b
   }
-return(fw)
+  return(fw)
 }

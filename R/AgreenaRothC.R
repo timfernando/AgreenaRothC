@@ -40,14 +40,16 @@ AgreenaRothC <-
     till_s <- match.arg(till_s)
 
     trm_b <- switch(till_b,
-                    "Till" = 1,
-                    "noTill" = 0.95,
-                    "redTill" = 0.93)
+      "Till" = 1,
+      "noTill" = 0.95,
+      "redTill" = 0.93
+    )
 
     trm_s <- switch(till_s,
-                    "Till" = 1,
-                    "noTill" = 0.95,
-                    "redTill" = 0.93)
+      "Till" = 1,
+      "noTill" = 0.95,
+      "redTill" = 0.93
+    )
 
     # translating perior in RothC months
     years <-
@@ -61,8 +63,9 @@ AgreenaRothC <-
     if (soil_data == "isric") {
       soil <-
         get_isric_soil_profile_rothc(lonlat,
-                                     statistic = "mean",
-                                     find.location.name = FALSE)
+          statistic = "mean",
+          find.location.name = FALSE
+        )
     }
 
     if (soil_data == "lucas") {
@@ -70,23 +73,30 @@ AgreenaRothC <-
     }
 
     wth <-
-      get_wth_power_nasa(lonlat = c(attr(soil, "meta")$Longitude,
-                                    attr(soil, "meta")$Latitude),
-                         dates = wth_dates)
+      get_wth_power_nasa(
+        lonlat = c(
+          attr(soil, "meta")$Longitude,
+          attr(soil, "meta")$Latitude
+        ),
+        dates = wth_dates
+      )
     # inorganic Carbon
-    iom <- 0.049 * (soil$Carbon[1] ^ (1.139))
+    iom <- 0.049 * (soil$Carbon[1]^(1.139))
 
     # weather distributions
     nsamples <- 5
     TS <-
       apply(wth[, c("TS_AV", "TS_SD")], 1, function(x) {
-        rnorm(nsamples, x["TS_AV"], x["TS_SD"])})
+        rnorm(nsamples, x["TS_AV"], x["TS_SD"])
+      })
     PR <-
       apply(wth[, c("PRECTOTCORR_AV", "PRECTOTCORR_SD")], 1, function(x) {
-        rnorm(nsamples, x["PRECTOTCORR_SD"], x["PRECTOTCORR_SD"])})
+        rnorm(nsamples, x["PRECTOTCORR_SD"], x["PRECTOTCORR_SD"])
+      })
     ET <-
       apply(wth[, c("EVPTRNS_AV", "EVPTRNS_SD")], 1, function(x) {
-        rnorm(nsamples, x["EVPTRNS_AV"], x["EVPTRNS_SD"])})
+        rnorm(nsamples, x["EVPTRNS_AV"], x["EVPTRNS_SD"])
+      })
     wth_dist <-
       array(
         c(TS, PR, ET),
@@ -106,7 +116,8 @@ AgreenaRothC <-
           pclay = mean(soil$ParticleSizeClay[1:3]),
           pE = 1.0,
           soil_cover = cp_b
-        )}))
+        )
+      }))
     colnames(fw_b) <- month.name
     fxi_b <- fw_b * ft_b * fc_b
 
@@ -124,7 +135,8 @@ AgreenaRothC <-
           pclay = mean(soil$ParticleSizeClay[1:3]),
           pE = 1.0,
           soil_cover = cp_s
-        )}))
+        )
+      }))
     colnames(fw_s) <- month.name
     fxi_s <- fw_s * ft_s * fc_s
 
@@ -147,7 +159,8 @@ AgreenaRothC <-
         soilC_calib <- function(inp_calib) {
           fxi_calib <-
             data.frame(spin_period, rep(x[, "baseline"],
-                                        length.out = length(spin_period)))
+              length.out = length(spin_period)
+            ))
           model_calib <- RothCModel(
             t = spin_period,
             c(
@@ -176,7 +189,8 @@ AgreenaRothC <-
 
         fxi_spin <-
           data.frame(spin_period, rep(x[, "baseline"],
-                                      length.out = length(spin_period)))
+            length.out = length(spin_period)
+          ))
         model_spin <- RothCModel(
           t = spin_period,
           c(
@@ -202,7 +216,8 @@ AgreenaRothC <-
 
         fxi_b <-
           data.frame(sim_period, rep(x[, "baseline"],
-                                     length.out = length(sim_period)))
+            length.out = length(sim_period)
+          ))
         model_b <- RothCModel(
           t = sim_period,
           c(
@@ -234,7 +249,8 @@ AgreenaRothC <-
 
         fxi_s <-
           data.frame(sim_period, rep(x[, "scenario"],
-                                     length.out = length(sim_period)))
+            length.out = length(sim_period)
+          ))
         model_s <- RothCModel(
           t = sim_period,
           c(

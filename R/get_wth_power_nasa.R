@@ -16,24 +16,24 @@
 #' @examples
 #' \dontrun{
 #' require(nasapower)
-#' pwr <- get_wth_power_nasa(lonlat = c(-93,42), dates = c("2012-01-01","2012-12-31"))
+#' pwr <- get_wth_power_nasa(lonlat = c(-93, 42), dates = c("2012-01-01", "2012-12-31"))
 #' }
 #'
-
-get_wth_power_nasa <- function (lonlat, dates)
-{
+get_wth_power_nasa <- function(lonlat, dates) {
   if (!requireNamespace("nasapower", quietly = TRUE)) {
     warning("The nasapower package is required for this function")
     return(NULL)
   }
   if (packageVersion("nasapower") <= "3.0.1") {
     stop("Please upgrade the 'nasapower' package to the latest version",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
 
   if (as.Date(dates[2]) - as.Date(dates[1]) < 700) {
     warning("Dates internval smaller than 24 months. Standard deviation estimations will not be calculated for all months of the year.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
 
   pwr <-
@@ -45,7 +45,9 @@ get_wth_power_nasa <- function (lonlat, dates)
       temporal_api = "daily"
     )
   pwr <-
-    pwr %>% group_by(MM, YEAR) %>% summarise(
+    pwr %>%
+    group_by(MM, YEAR) %>%
+    summarise(
       TS_AVT = mean(TS),
       TS_SDT = sd(TS),
       PRECTOTCORR_AVT = mean(PRECTOTCORR),
@@ -66,8 +68,10 @@ get_wth_power_nasa <- function (lonlat, dates)
   alist <- list()
 
   alist$units <- c("()", "()", "(oC)", "(oC)", "(mm)", "(mm)", "(?)", "(?)")
-  alist$comments <- paste("!data from nasapower R package. retrieved: ",
-                    Sys.time())
+  alist$comments <- paste(
+    "!data from nasapower R package. retrieved: ",
+    Sys.time()
+  )
   alist$longitude <- paste(lonlat[1])
   alist$latitude <- paste(lonlat[2])
   alist$dates <- dates
