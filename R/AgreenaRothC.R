@@ -8,7 +8,8 @@
 #' @param inp_s Biomass inputs in the test scenario
 #' @param cp_b Logical vector with months where the soil is covered. If only a
 #' single value is passed the whole period will be treated homogeneously.
-#' @param cp_s date ranges
+#' @param cp_s Logical vector with months where the soil is covered. If only a
+#' single value is passed the whole period will be treated homogeneously.
 #' @param till_b date ranges
 #' @param till_s date ranges
 #' @return returns a data frame with average (AV) and standard deviation (SD)
@@ -61,22 +62,11 @@ AgreenaRothC <-
       soil <-
         get_isric_soil_profile_rothc(lonlat,
                                      statistic = "mean",
-                                     find.location.name = TRUE)
+                                     find.location.name = FALSE)
     }
 
     if (soil_data == "lucas") {
-      soil <- data.frame(label = c("0-10cm", "10-20cm", "20-30cm"), Carbon = 1:3, ParticleSizeClay = 1:3)
-      distancia <- function(x1,x2) {
-        return(dist(rbind(x1, x2)))
-      }
-
-      y <- apply(lucas[,c("TH_LONG", "TH_LAT")], 1, distancia, lonlat)
-      lucas_soil <- lucas[match(min(y), y),c("Depth","OC", "CLAY")]
-      carbon <- rep(as.numeric(lucas_soil$OC)/(2/3)/3,3) # assuming carbon density is constant between 0-20 and 20-30 cm and extrapolating (regra de 3)
-      soil$Carbon <- carbon
-      soil$ParticleSizeClay <- rep(lucas_soil$CLAY,3)
-      attr(soil, "meta")$Longitude <- lucas[match(min(y), y),c("TH_LONG")]
-      attr(soil, "meta")$Latitude <- lucas[match(min(y), y),c("TH_LAT")]
+      soil <- get_lucas_soil_profile_rothc(lonlat)
     }
 
     wth <-
@@ -84,7 +74,7 @@ AgreenaRothC <-
                                     attr(soil, "meta")$Latitude),
                          dates = wth_dates)
     # inorganic Carbon
-    iom <- 0.049 * (soil$Carbon ^ (1.139))
+    iom <- 0.049 * (soil$Carbon[1] ^ (1.139))
 
     # weather distributions
     nsamples <- 5
@@ -105,7 +95,7 @@ AgreenaRothC <-
       )
 
     # flow rate effects distribution (baseline)
-    fc_b <- fC.crop.retainment(cp_b)
+    fc_b <- fC_crop_retainment(cp_b)
     ft_b <- t(apply(wth_dist[, , "TS"], 1, fT.RothC))
     fw_b <-
       t(apply(wth_dist[, , c("PR", "ET")], 1, function(x) {
@@ -123,7 +113,7 @@ AgreenaRothC <-
 
 
     # flow rate effects distribution (scenario)
-    fc_s <- fC.crop.retainment(cp_s)
+    fc_s <- fC_crop_retainment(cp_s)
     ft_s <- t(apply(wth_dist[, , "TS"], 1, fT.RothC))
     fw_s <-
       t(apply(wth_dist[, , c("PR", "ET")], 1, function(x) {
@@ -172,14 +162,14 @@ AgreenaRothC <-
               RPM = 0,
               BIO = 0,
               HUM = 0,
-              IOM = sum(iom[1:3])
+              IOM = iom
             ),
             In = inp_calib,
             clay = mean(soil$ParticleSizeClay[1:3]),
             xi = fxi_calib
           )
           soilC_calib <- sum(as.numeric(tail(getC(model_calib), 1)))
-          return((sum(soilC_calib) - sum(soil$Carbon[c(1, 2, 3)])) ^ 2)
+          return((sum(soilC_calib) - soil$Carbon[1])^2)
         }
 
         inp_calib <- optimize(f = soilC_calib, c(0, 50))$minimum
@@ -201,7 +191,7 @@ AgreenaRothC <-
             RPM = 0,
             BIO = 0,
             HUM = 0,
-            IOM = sum(iom[1:3])
+            IOM = iom
           ),
           In = inp_calib,
           clay = mean(soil$ParticleSizeClay[1:3]),
@@ -425,7 +415,7 @@ AgreenaRothC <-
         "Longitude final" = attr(soil, "meta")$Longitude,
         "Latitude final" = attr(soil, "meta")$Latitude,
         "Soil type" = attr(soil, "meta")$SoilType,
-        "Ini. SOC" = soil$Carbon,
+        "Ini. SOC" = soil$Carbon[1],
         "Mean 30cm clay %" = mean(soil$ParticleSizeClay[1:3]),
         "Mean TS" = colMeans(wth[, "TS_AV"]),
         "Mean PR" = colMeans(wth[, "PRECTOTCORR_AV"]),
@@ -445,7 +435,7 @@ AgreenaRothC <-
     alist$Latitude <- attr(soil, "meta")$Latitude
     alist$ini_Longitude <- attr(soil, "meta")$ini_Longitude
     alist$ini_Latitude <- attr(soil, "meta")$ini_Latitude
-    alist$ini_SOC <- soil$Carbon
+    alist$ini_SOC <- soil$Carbon[1]
     alist$Unit_SOC <- "C Mg/ha"
     attr(res, "meta") <- alist
 

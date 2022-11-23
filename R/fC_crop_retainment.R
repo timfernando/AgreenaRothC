@@ -7,7 +7,7 @@
 #' @export
 #'
 
-fC.crop.retainment <- function(x) {
+fC_crop_retainment <- function(x) {
   x <- as.logical(x)
   y <- ifelse(x, 0.6, 1)
   if (length(y)==1) {

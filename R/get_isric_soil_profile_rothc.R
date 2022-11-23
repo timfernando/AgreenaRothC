@@ -11,7 +11,7 @@
 #' @return data frame with soil characteristics and \code{meta} Attributes.
 #' @details Variable which are directly retrieved and a simple unit conversion is performed: \cr
 #' * Bulk density - bdod \cr
-#' * Carbon - soc \cr
+#' * Carbon - ocs \cr
 #' * Clay - clay \cr
 #' * Sand - sand \cr
 #' * Silt - silt \cr
@@ -47,7 +47,7 @@ get_isric_soil_profile_rothc <- function(lonlat,
     rest0 <- "https://rest.isric.org/soilgrids/v2.0/properties/query?lon="
     rest1 <- paste0(rest0, lon, "&lat=", lat)
     rest.properties <- paste("&property=bdod",
-      "property=soc",
+      "property=ocs",
       "property=clay",
       "property=sand",
       "property=silt",
@@ -66,24 +66,23 @@ get_isric_soil_profile_rothc <- function(lonlat,
   n <- 10
   c <- 0.001
   rest.data <- retrieve_soil(lon, lat, statistic)
-  soc <- rest.data$properties$layers[5, 3][[1]][, 3]
-  soc <- NA
+  ocs <- rest.data$properties$layers[3, 3][[1]][, 3]
 
   #### Process query
   sp.nms <- rest.data$properties$layers[["name"]]
 
-  if (!all(sp.nms %in% c("bdod", "soc", "clay", "sand", "silt"))) {
+  if (!all(sp.nms %in% c("bdod", "ocs", "clay", "sand", "silt"))) {
     cat("Found these properties", sp.nms, "\n")
-    cat("Expected these properties", c("bdod", "soc", "clay", "sand", "silt"), "\n")
+    cat("Expected these properties", c("bdod", "ocs", "clay", "sand", "silt"), "\n")
     stop("soil properties names do not match")
   }
 
 
 
-  # if(any(is.na(soc))) stop("No soil data available for this location. Did you specify the coordinates correctly?")
+  # if(any(is.na(ocs))) stop("No soil data available for this location. Did you specify the coordinates correctly?")
 
-  if (any(is.na(soc))) {
-    while (any(is.na(soc))) {
+  if (any(is.na(ocs))) {
+    while (any(is.na(ocs))) {
       lon <- runif(n, min = lon - c, max = lon + c)
       lat <- runif(n, min = lat - c, max = lat + c)
       lonlat_grid <- expand.grid(lon, lat)
@@ -92,8 +91,8 @@ get_isric_soil_profile_rothc <- function(lonlat,
         lon <- as.numeric(lonlat[i, 1])
         lat <- as.numeric(lonlat[i, 2])
         rest.data <- retrieve_soil(lon, lat, statistic)
-        soc <- rest.data$properties$layers[5, 3][[1]][, 3]
-        if (!any(is.na(soc))) {
+        ocs <- rest.data$properties$layers[5, 3][[1]][, 3]
+        if (!any(is.na(ocs))) {
           warning(paste("Coordinates where altered from (lon, lat):", lon_initial, lat_initial, "->", lon, lat))
           break
         }
@@ -104,15 +103,15 @@ get_isric_soil_profile_rothc <- function(lonlat,
 
   bdod <- rest.data$properties$layers[1, 3][[1]][, 3]
   clay <- rest.data$properties$layers[2, 3][[1]][, 3]
-  sand <- rest.data$properties$layers[3, 3][[1]][, 3]
-  silt <- rest.data$properties$layers[4, 3][[1]][, 3]
+  sand <- rest.data$properties$layers[4, 3][[1]][, 3]
+  silt <- rest.data$properties$layers[5, 3][[1]][, 3]
 
 
   ### For some of the conversions see: https://www.isric.org/explore/soilgrids/faq-soilgrids
   soil_profile <- NULL
   soil_profile$layers <- rest.data$properties$layers[1, 3][[1]][2]
   soil_profile$BD <- bdod[[1]] * 1e-2
-  soil_profile$Carbon <- soc[[1]] * 1e-2
+  soil_profile$Carbon <- ocs[[1]]
   soil_profile$ParticleSizeClay <- clay[[1]] * 1e-1
   soil_profile$ParticleSizeSand <- sand[[1]] * 1e-1
   soil_profile$ParticleSizeSilt <- silt[[1]] * 1e-1

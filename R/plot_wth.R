@@ -1,6 +1,6 @@
 #' @title Plot weather climate Normals
 #' @param wth data output from \link{get_wth_power_nasa}
-#' @return Long formatted soil carbon values that can be ploted by \link{plotRothC}
+#' @return Long formatted soil carbon values that can be ploted by \link{plot_rothc}
 #' @details Plots weather data Climate normals download from nasa power
 #' @author Marcos Alves
 #' @seealso \link{get_wth_power_nasa}
@@ -9,7 +9,7 @@
 #' @export
 #'
 
-plotWth <- function(wth) {
+plot_wth <- function(wth) {
   p1 <- ggplot(data = wth,aes(x = MM)) +
     geom_line(aes(y = TS_AV, ), size = 1) +
     geom_ribbon(aes(y = TS_AV, ymin = TS_AV - TS_SD, ymax = TS_AV + TS_SD), alpha = .2) +

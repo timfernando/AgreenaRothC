@@ -32,7 +32,7 @@ dates <- c("1990-01-01", "2020-12-30")
 #--------------------------
 
 wth <- get_wth_power_nasa(lonlat = lonlat, dates = dates)
-plotWth(wth)
+plot_wth(wth)
 
 
 #--------------------------
@@ -61,6 +61,6 @@ saveRDS(x, "test.rds")
 # Plot bacth results
 #--------------------------
 
-plotRothC(x = "baseline", x)
+plot_rothc(x = "baseline", x)
 
 ```
