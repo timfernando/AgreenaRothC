@@ -111,7 +111,7 @@ AgreenaRothC <-
       t(apply(wth_dist[, , c("PR", "ET")], 1, function(x) {
         f_moist_rothc(
           pp = x[, "PR"],
-          et = x[, "ET"] / 0.1,
+          et = x[, "ET"],
           s_thick = 30,
           pclay = mean(soil$ParticleSizeClay[1:3]),
           pE = 1.0,
@@ -130,7 +130,7 @@ AgreenaRothC <-
       t(apply(wth_dist[, , c("PR", "ET")], 1, function(x) {
         f_moist_rothc(
           pp = x[, "PR"],
-          et = x[, "ET"] / 0.1,
+          et = x[, "ET"],
           s_thick = 30,
           pclay = mean(soil$ParticleSizeClay[1:3]),
           pE = 1.0,

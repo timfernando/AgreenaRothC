@@ -39,27 +39,21 @@ tidy_rothc <- function(...) {
     x <- NULL
     assign("x", ...)
     z <- NULL
-    for (i in 1:length(x)) {
-      y <- x[[i]]["soilC_scenario"][[1]]
-      y <- y[, grepl("SC", colnames(y))]
-      colnames(y) <- c(paste0("SC_M_", i), paste0("SC_SD_", i))
-      z <- c(z, y)
-    }
+    y <- x["soilC_scenario"][[1]]
+    y <- y[, grepl("SC", colnames(y))]
+    colnames(y) <- c(paste0("SC_M_", 1), paste0("SC_SD_", 1))
+    z <- y
     z <- data.frame(z, "month" = 1:nrow(y), "Type" = "scenario")
     z <- pivot_longer(z, cols = grep("SC_M", colnames(z), value = TRUE), names_to = c("run_code_mean"), values_to = "mean") %>%
       pivot_longer(cols = grep("SC_SD", colnames(z), value = TRUE), names_to = c("run_code_sd"), values_to = "sd")
-
     w <- NULL
-    for (i in 1:length(x)) {
-      y <- x[[i]]["soilC_baseline"][[1]]
-      y <- y[, grepl("SC", colnames(y))]
-      colnames(y) <- c(paste0("SC_M_", i), paste0("SC_SD_", i))
-      w <- c(w, y)
-    }
+    y <- x["soilC_baseline"][[1]]
+    y <- y[, grepl("SC", colnames(y))]
+    colnames(y) <- c(paste0("SC_M_", 1), paste0("SC_SD_", 1))
+    w <- y
     w <- data.frame(w, "month" = 1:nrow(y), "Type" = "baseline")
     w <- pivot_longer(w, cols = grep("SC_M", colnames(w), value = TRUE), names_to = c("run_code_mean"), values_to = "mean") %>%
       pivot_longer(cols = grep("SC_SD", colnames(w), value = TRUE), names_to = c("run_code_sd"), values_to = "sd")
-
     res <- rbind(z, w)
     return(res)
   }

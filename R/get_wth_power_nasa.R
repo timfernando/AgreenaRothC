@@ -50,19 +50,17 @@ get_wth_power_nasa <- function(lonlat, dates) {
     summarise(
       TS_AVT = mean(TS),
       TS_SDT = sd(TS),
-      PRECTOTCORR_AVT = mean(PRECTOTCORR),
-      PRECTOTCORR_SDT = sd(PRECTOTCORR),
-      EVPTRNS_AVT = mean(EVPTRNS),
-      EVPTRNS_SDT = sd(EVPTRNS)
+      PRECTOTCORR_SUM = sum(PRECTOTCORR),
+      EVPTRNS_SUM = sum(EVPTRNS),
     ) %>%
     group_by(MM) %>%
     summarise(
       TS_AV = mean(TS_AVT),
       TS_SD = sd(TS_AVT),
-      PRECTOTCORR_AV = mean(PRECTOTCORR_AVT),
-      PRECTOTCORR_SD = sd(PRECTOTCORR_AVT),
-      EVPTRNS_AV = mean(EVPTRNS_AVT),
-      EVPTRNS_SD = sd(EVPTRNS_AVT)
+      PRECTOTCORR_AV = mean(PRECTOTCORR_SUM),
+      PRECTOTCORR_SD = sd(PRECTOTCORR_SUM),
+      EVPTRNS_AV = mean(EVPTRNS_SUM),
+      EVPTRNS_SD = sd(EVPTRNS_SUM)
     )
 
   alist <- list()

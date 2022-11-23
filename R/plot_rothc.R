@@ -11,18 +11,22 @@
 #' @export
 #'
 
-plot_rothc <- function(x = "scenario", ...) {
+plot_rothc <- function(...) {
   z <- tidy_rothc(...)
   p1 <- ggplot(data = z[z$Type == "scenario", ], aes(x = month)) +
     # geom_line(aes(y = mean, color = run_code_mean ), size = 0.5) +
     geom_ribbon(aes(ymin = mean - sd, ymax = mean + sd, fill = run_code_mean), alpha = .2) +
     geom_smooth(aes(y = mean, color = run_code_mean), size = 0.5) +
     ggnewscale::new_scale_color() +
-    geom_smooth(data = z[z$Type == "baseline", ], aes(x = month, y = mean, color = run_code_mean), size = 0.5)
+    geom_smooth(data = z[z$Type == "baseline", ], aes(x = month, y = mean, color = run_code_mean), size = 0.5) +
+    xlab("N Months") +
+    ylab("tC/ha")
 
 
-  p2 <- ggplot(data = z[z$Type == "scenario", ], aes(x = run_code_mean, y = mean)) +
-    geom_boxplot(aes(fill = run_code_mean), alpha = 0.9)
+  p2 <- ggplot(data = tail(z[z$Type == "scenario", ], 12), aes(x = run_code_mean, y = mean)) +
+    geom_boxplot(aes(fill = run_code_mean), alpha = 0.9) +
+    xlab("Simulations") +
+    ylab("tC/ha")
   # geom_dotplot(binaxis='y', stackdir='center', binwidth = 0.7, alpha = 0.2, dotsize = 0.05)
 
   figure <- ggarrange(p1, p2,
