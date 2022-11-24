@@ -213,7 +213,6 @@ AgreenaRothC <-
         )
         soilC_spin_all_time <- getC(model_spin)
         soilC_spin <- as.numeric(tail(soilC_spin_all_time, 1))
-
         fxi_b <-
           data.frame(sim_period, rep(x[, "baseline"],
             length.out = length(sim_period)
@@ -236,7 +235,7 @@ AgreenaRothC <-
         soilC_b <- as.numeric(tail(soilC_b_all_time, 1))
 
         if (inp_s == "same_as_base") {
-          inp_s <- inp_calib
+          inp_s <- 0
         } else {
           if (!is.numeric(inp_s)) {
             stop(
@@ -261,7 +260,7 @@ AgreenaRothC <-
             k.IOM = 0 * trm_s
           ),
           C0 = soilC_spin,
-          In = inp_s,
+          In = inp_calib + inp_s,
           clay = mean(soil$ParticleSizeClay[1:3]),
           xi = fxi_s
         )
