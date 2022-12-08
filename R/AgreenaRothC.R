@@ -1,7 +1,7 @@
 #' @title Agreena RothC
 #' @description Calculates soil carbon stocks for the RothC spin up period,
 #' baseline and scenario runs.
-#' @name get_wth_power_nasa
+#' @name AgreenaRothC
 #' @param lonlat Longitude and latitude vector
 #' @param sim_period Simulating period
 #' @param inp_b Biomass inputs in the baseline scenario
