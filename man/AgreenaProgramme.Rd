@@ -2,10 +2,9 @@
 % Please edit documentation in R/AgreenaProgramme.R
 \name{AgreenaProgramme}
 \alias{AgreenaProgramme}
-\alias{AgreenaProgramme2}
 \title{Agreena RothC}
 \usage{
-AgreenaProgramme2(
+AgreenaProgramme(
   lonlat,
   sim_period,
   inp_s = "same_as_base",

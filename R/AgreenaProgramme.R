@@ -28,7 +28,7 @@
 #' @export
 #'
 
-AgreenaProgramme2 <-
+AgreenaProgramme <-
   function(lonlat,
            sim_period,
            inp_s = "same_as_base",
