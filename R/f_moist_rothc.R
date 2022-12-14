@@ -2,7 +2,7 @@
 #'
 #' Calculates the effects of moisture (precipitation and pan evaporation) on
 #' decomposition rates according to the RothC model.
-#'
+#' @name f_moist_rothc
 #' @title Effect of moisture on C flows
 #' @param pp A vector with monthly precipitation (mm).
 #' @param et A vector with same length with open pan evaporation or

@@ -18,6 +18,7 @@
 #' attr(sp1, "meta")
 #' }
 #' @export
+#'
 
 get_lucas_soil_profile_rothc <- function(lonlat) {
   soil <- data.frame(label = c("0-10cm", "10-20cm", "20-30cm"), Carbon = 1:3, ParticleSizeClay = 1:3)

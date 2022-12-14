@@ -12,6 +12,7 @@
 #' single value is passed the whole period will be treated homogeneously.
 #' @param till_b date ranges
 #' @param till_s date ranges
+#' @param soiltype argument necessary if \code{soil_data} is numerical
 #' @param soil_data Either "lucas", "isric" or a number describing SOM in %
 #' @return returns a data frame with average (AV) and standard deviation (SD)
 #' of surface temperature (TS), bias corrected precipitation (PRECTOTCORR) and
@@ -27,29 +28,57 @@
 #' @export
 #'
 
-AgreenaProgramme <-
+AgreenaProgramme2 <-
   function(lonlat,
            sim_period,
            inp_s = "same_as_base",
-           cp_b = FALSE,
-           cp_s = TRUE,
-           till_b = c("Till", "noTill", "redTill"),
-           till_s = c("Till", "noTill", "redTill"),
+           cp_b = c("spring", "winter", "none", "catch"),
+           cp_s = c("spring", "winter", "none", "catch"),
+           till_b = c("Reduced tillage", "Conventional tillage", "No tillage", "Not available"),
+           till_s = c("Reduced tillage", "Conventional tillage", "No tillage", "Not available"),
+           soiltype  = "Clay",
            soil_data = "lucas") {
+
     set.seed(123)
     start <- Sys.time()
-    till_b <- match.arg(till_b)
-    till_s <- match.arg(till_s)
 
-    trm_b <- switch(till_b,
-                    "Till" = 1,
-                    "noTill" = 0.95,
-                    "redTill" = 0.93)
+    tillage_convertion <- function(x){
+          y <- switch(x,
+                    "Conventional tillage" = 1,
+                    "No tillage" = 0.95,
+                    "Reduced tillage" = 0.93,
+                    "Not available" = 1)
+          return(y)
+    }
 
-    trm_s <- switch(till_s,
-                    "Till" = 1,
-                    "noTill" = 0.95,
-                    "redTill" = 0.93)
+    cover_crop_convertion <- function(x){
+      y <- switch(x,
+                  "winter" = c(1,1,1,1,1,1,1,1,0,0,1,1),
+                  "none" =   c(0,0,0,0,0,1,1,1,1,0,0,0),
+                  "spring" = c(0,0,0,0,1,1,1,1,1,0,0,0),
+                  "catch" =  c(0,0,1,1,1,1,1,1,1,0,0,0))
+      return(y)
+    }
+
+    if(is.character(till_b)){
+      till_b <- match.arg(till_b)
+      trm_b <- tillage_convertion(till_b)
+    }
+
+    if(is.character(till_s)){
+      till_s <- match.arg(till_s)
+      trm_s <- tillage_convertion(till_s)
+    }
+
+    if(is.character(cp_b)){
+      cp_b <- match.arg(cp_b)
+      cp_b <- cover_crop_convertion(cp_b)
+    }
+
+    if(is.character(cp_s)){
+      cp_s <- match.arg(cp_s)
+      cp_s <- cover_crop_convertion(cp_s)
+    }
 
     # translating perior in RothC months
     years <-
@@ -58,7 +87,7 @@ AgreenaProgramme <-
     spin_period <- seq(1 / 12, 250, by = 1 / 12)
 
     # downloading external input data
-    wth_dates <- c("1990-01-01", "2021-12-30")
+    wth_dates <- c("2011-01-01", "2021-12-30")
 
     if (soil_data == "isric") {
       soil <-
@@ -77,20 +106,25 @@ AgreenaProgramme <-
           #     Carbon = 1:3,
           #     ParticleSizeClay = 1:3
           #   )
-          soil <-
-            get_lucas_soil_profile_rothc(lonlat)
+          soil <- data.frame(label = c("0-10cm", "10-20cm", "20-30cm"), Carbon = 1:3, ParticleSizeClay = 1:3)
+          soil$BD <- switch(
+            soiltype,
+            "Clay" = 1.5,
+            "Silt" = 1.3,
+            "Sand" = 1.7
+          )
           bulk_density <- soil$BD * 1000 # from g/cm3 to kg/m3 # From Lucas BD in the
           soil$Carbon <-
             soil_data / 172 * bulk_density * soil_lyr_depth * 10 # from SOM (CFT input) to tC/ha (RothC input)
-          #TODO: The line bellow needs to be corrected to have the same clay content averages from CFT
-          soil$ParticleSizeClay <- soil_lucas$ParticleSizeClay[1]
-          # soiltype <- "clay" # dummy value
-          # soil$ParticleSizeClay <- switch(
-          #   soiltype,
-          #   "clay" = 0.50,
-          #   "silt" = 0.30,
-          #   "sand" = 0.20
-          # )
+          # soil$ParticleSizeClay <- soil_lucas$ParticleSizeClay[1]
+          soil$ParticleSizeClay <- switch(
+            soiltype,
+            "Clay" = 0.60,
+            "Silt" = 0.30,
+            "Sand" = 0.15
+          )
+          attr(soil, "meta")$Longitude <- lonlat[1]
+          attr(soil, "meta")$Latitude  <- lonlat[2]
         }
       }
     }
@@ -147,12 +181,12 @@ AgreenaProgramme <-
                sim_period) {
         trm_spin <- trm_b
 
+        fxi_calib <-
+          data.frame(spin_period, rep(x[, "baseline"],
+                                      length.out = length(spin_period)))
         soilC_calib <- function(inp_calib) {
-          fxi_calib <-
-            data.frame(spin_period, rep(x[, "baseline"],
-                                        length.out = length(spin_period)))
-          model_calib <- RothCModel(
-            t = spin_period,
+
+          c_init <<- CeqlRoth(
             c(
               k.DPM = 10 * trm_spin,
               k.RPM = 0.3 * trm_spin,
@@ -171,17 +205,11 @@ AgreenaProgramme <-
             clay = mean(soil$ParticleSizeClay[1:3]),
             xi = fxi_calib
           )
-          c_init <<- as.numeric(tail(getC(model_calib), 1))
-          soilC_calib <- sum(c_init)
-          return((sum(soilC_calib) - soil$Carbon[1]) ^ 2)
-        }
-
+           soilC <- sum(c_init)
+           return((sum(soilC) - soil$Carbon[1]) ^ 2)
+         }
         inp_calib <- optimize(f = soilC_calib, c(0, 50))$minimum
-
-        fxi_spin <-
-          data.frame(spin_period, rep(x[, "baseline"],
-                                      length.out = length(spin_period)))
-
+        c_init <- as.vector(c_init)
         fxi_b <-
           data.frame(sim_period, rep(x[, "baseline"],
                                      length.out = length(sim_period)))

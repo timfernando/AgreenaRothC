@@ -31,7 +31,7 @@ Details: https://www.isric.org/explore/soilgrids/faq-soilgrids \cr
 Variable which are directly retrieved and a simple unit conversion is performed: \cr
 \itemize{
 \item Bulk density - bdod \cr
-\item Carbon - soc \cr
+\item Carbon - ocs \cr
 \item Clay - clay \cr
 \item Sand - sand \cr
 \item Silt - silt \cr
@@ -44,9 +44,8 @@ Variable which are directly retrieved and a simple unit conversion is performed:
 sp1 <- get_isric_soil_profile_rothc(lonlat = c(-93, 42))
 sp1
 attr(sp1, "meta")
-
-
 }
+
 }
 \seealso{
 \code{\link{apsimx_soil_profile}}, \code{\link{edit_apsim_replace_soil_profile}}, \code{\link{edit_apsimx_replace_soil_profile}}.

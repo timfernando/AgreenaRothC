@@ -4,12 +4,12 @@
 \alias{plot_rothc}
 \title{Plot AgreenaRothC diagnostics plots}
 \usage{
-plot_rothc(x = "scenario", ...)
+plot_rothc(...)
 }
 \arguments{
-\item{x}{Results to be plotted (either "scenario" or "baseline")}
-
 \item{...}{list of objects output from \link{AgreenaRothC}}
+
+\item{x}{Results to be plotted (either "scenario" or "baseline")}
 }
 \value{
 Long formatted soil carbon values that can be ploted by \link{plot_rothc}
