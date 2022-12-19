@@ -8,6 +8,7 @@ AgreenaProgramme(
   lonlat,
   sim_period,
   inp_s = "same_as_base",
+  fym_s = "same_as_base",
   cp_b = c("spring", "winter", "none", "catch"),
   cp_s = c("spring", "winter", "none", "catch"),
   till_b = c("Reduced tillage", "Conventional tillage", "No tillage", "Not available"),
@@ -23,6 +24,8 @@ AgreenaProgramme(
 
 \item{inp_s}{Biomass inputs in the test scenario}
 
+\item{fym_s}{Farm yield manure added in the test scenario}
+
 \item{cp_b}{Logical vector with months where the soil is covered. If only a
 single value is passed the whole period will be treated homogeneously.}
 
@@ -36,8 +39,6 @@ single value is passed the whole period will be treated homogeneously.}
 \item{soiltype}{argument necessary if \code{soil_data} is numerical}
 
 \item{soil_data}{Either "lucas", "isric" or a number describing SOM in \%}
-
-\item{inp_b}{Biomass inputs in the baseline scenario}
 }
 \value{
 returns a data frame with average (AV) and standard deviation (SD)

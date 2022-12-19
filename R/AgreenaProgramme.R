@@ -4,7 +4,7 @@
 #' @name AgreenaProgramme
 #' @param lonlat Longitude and latitude vector
 #' @param sim_period Simulating period
-#' @param inp_b Biomass inputs in the baseline scenario
+#' @param fym_s Farm yield manure added in the test scenario
 #' @param inp_s Biomass inputs in the test scenario
 #' @param cp_b Logical vector with months where the soil is covered. If only a
 #' single value is passed the whole period will be treated homogeneously.
@@ -32,6 +32,7 @@ AgreenaProgramme <-
   function(lonlat,
            sim_period,
            inp_s = "same_as_base",
+           fym_s = "same_as_base",
            cp_b = c("spring", "winter", "none", "catch"),
            cp_s = c("spring", "winter", "none", "catch"),
            till_b = c("Reduced tillage", "Conventional tillage", "No tillage", "Not available"),
@@ -242,6 +243,17 @@ AgreenaProgramme <-
           }
         }
 
+        if (fym_s == "same_as_base") {
+          fym_s <- 0
+        } else {
+          if (!is.numeric(fym_s)) {
+            stop(
+              "fym_s must be either 'same_as_base' representing a continuation of the
+              calibrated input biomass or a number representing the additional farm yard manure application"
+            )
+          }
+        }
+
         fxi_s <-
           data.frame(sim_period, rep(x[, "scenario"],
                                      length.out = length(sim_period)))
@@ -256,6 +268,7 @@ AgreenaProgramme <-
           ),
           C0 = c_init,
           In = inp_calib + inp_s,
+          FYM = fym_s,
           clay = mean(soil$ParticleSizeClay[1:3]),
           xi = fxi_s
         )
@@ -287,19 +300,20 @@ AgreenaProgramme <-
     time <- end - start
     res <-
       list(
-        "Ini. SOC" = soil$Carbon[1],
-        "C. stock change" = RothC_runs$sc_diff,
+        "Ini_SOC" = soil$Carbon[1],
+        "C_stock_change" = RothC_runs$sc_diff,
         "input_calib" = RothC_runs$inp_calib,
         "Mean_input_scenario" = inp_s,
-        "Longitude final" = attr(soil, "meta")$Longitude,
-        "Latitude final" = attr(soil, "meta")$Latitude,
-        "Longitude init." = lonlat[1],
-        "Longitude init." = lonlat[2],
-        "Soil type" = attr(soil, "meta")$SoilType,
-        "Mean 30cm clay %" = mean(soil$ParticleSizeClay[1:3]),
-        "Mean TS" = colMeans(wth[, "TS_AV"]),
-        "Mean PR" = colMeans(wth[, "PRECTOTCORR_AV"]),
-        "Mean ET" = colMeans(wth[, "EVPTRNS_AV"]),
+        "Mean_input_scenario" = inp_s,
+        "Longitude_final" = attr(soil, "meta")$Longitude,
+        "Latitude_final" = attr(soil, "meta")$Latitude,
+        "Longitude_init." = lonlat[1],
+        "Longitude_init." = lonlat[2],
+        "Soil_type" = attr(soil, "meta")$SoilType,
+        "Mean_30cm_clay_%" = mean(soil$ParticleSizeClay[1:3]),
+        "Mean_TS" = colMeans(wth[, "TS_AV"]),
+        "Mean_PR" = colMeans(wth[, "PRECTOTCORR_AV"]),
+        "Mean_ET" = colMeans(wth[, "EVPTRNS_AV"]),
         "Unit_SOC" = "",
         "time_elapsed" =  time,
         "soilC_baseline" = RothC_runs$sc_baseline,
