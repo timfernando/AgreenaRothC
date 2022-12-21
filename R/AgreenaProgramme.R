@@ -31,6 +31,7 @@
 AgreenaProgramme <-
   function(lonlat,
            sim_period,
+           country = NULL,
            inp_s = "same_as_base",
            fym_s = "same_as_base",
            cp_b = c("spring", "winter", "none", "catch"),
@@ -130,10 +131,15 @@ AgreenaProgramme <-
       }
     }
 
-    wth <-
-      get_wth_power_nasa(lonlat = c(attr(soil, "meta")$Longitude,
-                                    attr(soil, "meta")$Latitude),
-                         dates = wth_dates)
+    if(is.null(country)) {
+      wth <-
+        get_wth_power_nasa(lonlat = c(attr(soil, "meta")$Longitude,
+                                      attr(soil, "meta")$Latitude),
+                           dates = wth_dates)
+    } else {
+      wth <- dsw[[country]]
+    }
+
     # inorganic Carbon
     iom <- 0.049 * (soil$Carbon[1] ^ (1.139))
 
