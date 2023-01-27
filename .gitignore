@@ -1,2 +1,22 @@
-.Rproj.user
+
 inst/doc
+
+# R
+.RData
+
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+.RDataTmp
+
+# RStudio Files
+.Rproj.user
+
+# User-specific files
+.Ruserdata
+
+# Mac
+.DS_Store
